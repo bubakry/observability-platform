@@ -1,0 +1,12 @@
+{
+  "name": "X-Ray",
+  "type": "grafana-x-ray-datasource",
+  "uid": "xray-observability",
+  "access": "proxy",
+  "editable": true,
+  "jsonData": {
+    "authType": "default",
+    "defaultRegion": "__AWS_REGION__"
+  }
+}
+

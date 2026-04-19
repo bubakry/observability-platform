@@ -1,0 +1,104 @@
+{
+  "uid": "obs-traces",
+  "title": "X-Ray Traces",
+  "tags": ["aws", "observability", "traces"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "nodeGraph",
+      "title": "X-Ray Service Map",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "grafana-x-ray-datasource",
+        "uid": "__XRAY_UID__"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-x-ray-datasource",
+            "uid": "__XRAY_UID__"
+          },
+          "group": {
+            "GroupARN": "default",
+            "GroupName": "Default"
+          },
+          "query": "",
+          "queryMode": "X-Ray",
+          "queryType": "getServiceMap",
+          "refId": "A",
+          "region": "__AWS_REGION__"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Recent Trace Summaries",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "datasource": {
+        "type": "grafana-x-ray-datasource",
+        "uid": "__XRAY_UID__"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-x-ray-datasource",
+            "uid": "__XRAY_UID__"
+          },
+          "group": {
+            "GroupARN": "default",
+            "GroupName": "Default"
+          },
+          "query": "",
+          "queryMode": "X-Ray",
+          "queryType": "getTraceSummaries",
+          "refId": "A",
+          "region": "__AWS_REGION__"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    }
+  ]
+}
+

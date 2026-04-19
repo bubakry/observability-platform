@@ -1,0 +1,31 @@
+# Example Terraform variable file for the AWS Enterprise Observability Platform.
+#
+# Copy to terraform.tfvars and adjust for your environment.
+
+aws_account_id = ""
+aws_region     = "us-east-1"
+
+project_name = "aws-enterprise-observability"
+environment  = "portfolio"
+
+alarm_email = ""
+owner       = ""
+cost_center = ""
+
+allowed_alb_ingress_cidrs = ["0.0.0.0/0"]
+alb_certificate_arn       = null
+
+ecs_desired_count             = 2
+ecs_autoscaling_min_capacity   = 2
+ecs_autoscaling_max_capacity   = 6
+ecs_autoscaling_cpu_target     = 60
+ecs_autoscaling_memory_target  = 70
+
+opensearch_instance_count                = 2
+opensearch_create_service_linked_role    = false
+grafana_kms_key_deletion_window_in_days  = 30
+
+enable_alb_deletion_protection = true
+ecr_force_delete               = false
+ecr_image_tag_mutability       = "IMMUTABLE"
+log_retention_days             = 30

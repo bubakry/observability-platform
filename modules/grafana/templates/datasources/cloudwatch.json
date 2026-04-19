@@ -1,0 +1,16 @@
+{
+  "name": "CloudWatch",
+  "type": "cloudwatch",
+  "uid": "cloudwatch-observability",
+  "access": "proxy",
+  "isDefault": true,
+  "editable": true,
+  "jsonData": {
+    "authType": "default",
+    "defaultRegion": "__AWS_REGION__",
+    "defaultLogGroups": [
+      "__APP_LOG_GROUP__"
+    ]
+  }
+}
+

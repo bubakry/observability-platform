@@ -1,0 +1,78 @@
+{
+  "uid": "obs-logs",
+  "title": "Application Logs",
+  "tags": ["aws", "observability", "logs"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "logs",
+      "title": "Recent Structured Logs",
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "editorMode": "code",
+          "expression": "fields @timestamp, level, message, path, status_code, trace_id | sort @timestamp desc | limit 200",
+          "logGroupNames": [
+            "__APP_LOG_GROUP__"
+          ],
+          "queryMode": "Logs",
+          "refId": "A",
+          "region": "__AWS_REGION__"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      }
+    }
+  ]
+}
+

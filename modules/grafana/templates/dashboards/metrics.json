@@ -1,0 +1,216 @@
+{
+  "uid": "obs-metrics",
+  "title": "Platform Metrics",
+  "tags": ["aws", "observability", "metrics"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "ECS CPU Utilization",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "ClusterName": "__CLUSTER_NAME__",
+            "ServiceName": "__SERVICE_NAME__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "CPU %",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "CPUUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Average"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "ECS Memory Utilization",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "ClusterName": "__CLUSTER_NAME__",
+            "ServiceName": "__SERVICE_NAME__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "Memory %",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "MemoryUtilization",
+          "metricQueryType": 0,
+          "namespace": "AWS/ECS",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Average"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "ALB Request Count",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "Requests",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "RequestCount",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Sum"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    }
+  ]
+}
+

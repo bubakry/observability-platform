@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Initialize Terraform
+        run: terraform init -backend=false
+
+      - name: Validate Terraform
+        run: terraform validate
+
+      - name: Validate Python sources
+        run: python3 -m compileall app
+
+      - name: Validate shell scripts
+        run: bash -n modules/grafana/scripts/provision_grafana.sh
+
+      - name: Validate Grafana JSON templates
+        run: |
+          jq empty modules/grafana/templates/datasources/cloudwatch.json
+          jq empty modules/grafana/templates/datasources/xray.json
+          find modules/grafana/templates/dashboards -name '*.json' -print0 | xargs -0 -n 1 jq empty

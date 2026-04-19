@@ -1,0 +1,324 @@
+{
+  "uid": "obs-sla",
+  "title": "SLA Overview",
+  "tags": ["aws", "observability", "sla"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Healthy Targets",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__",
+            "TargetGroup": "__TARGET_GROUP_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "Healthy Targets",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "HealthyHostCount",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Average"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Target 5XX Count",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__",
+            "TargetGroup": "__TARGET_GROUP_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "5XX",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "HTTPCode_Target_5XX_Count",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Sum"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Target Response Time",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__",
+            "TargetGroup": "__TARGET_GROUP_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "Response time",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "TargetResponseTime",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Average"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Availability Signals",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "__CLOUDWATCH_UID__"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__",
+            "TargetGroup": "__TARGET_GROUP_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "Healthy hosts",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "HealthyHostCount",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "A",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Average"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "__CLOUDWATCH_UID__"
+          },
+          "dimensions": {
+            "LoadBalancer": "__ALB_ARN_SUFFIX__",
+            "TargetGroup": "__TARGET_GROUP_ARN_SUFFIX__"
+          },
+          "expression": "",
+          "id": "",
+          "label": "5XX count",
+          "logGroups": [],
+          "matchExact": true,
+          "metricEditorMode": 0,
+          "metricName": "HTTPCode_Target_5XX_Count",
+          "metricQueryType": 0,
+          "namespace": "AWS/ApplicationELB",
+          "period": "",
+          "queryMode": "Metrics",
+          "refId": "B",
+          "region": "__AWS_REGION__",
+          "sqlExpression": "",
+          "statistic": "Sum"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    }
+  ]
+}
