@@ -8,9 +8,14 @@ output "alb_https_enabled" {
   value       = module.ecs_app.alb_https_enabled
 }
 
-output "grafana_workspace_url" {
-  description = "Amazon Managed Grafana workspace URL."
-  value       = module.grafana.workspace_endpoint
+output "grafana_url" {
+  description = "Public URL for the self-hosted Grafana workspace."
+  value       = module.grafana.grafana_url
+}
+
+output "grafana_admin_secret_name" {
+  description = "Secrets Manager secret name that holds the Grafana admin password. Read with: aws secretsmanager get-secret-value --secret-id <name> --query SecretString --output text"
+  value       = module.grafana.admin_secret_name
 }
 
 output "opensearch_endpoint" {
@@ -34,5 +39,6 @@ output "ecr_repositories" {
     app      = module.ecr_build.app_repository_url
     firelens = module.ecr_build.firelens_repository_url
     xray     = module.ecr_build.xray_repository_url
+    grafana  = module.ecr_build.grafana_repository_url
   }
 }

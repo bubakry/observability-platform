@@ -130,34 +130,21 @@ variable "opensearch_create_service_linked_role" {
   default     = false
 }
 
-variable "grafana_version" {
-  description = "Amazon Managed Grafana major/minor version."
-  type        = string
-  default     = "10.4"
-}
-
-variable "grafana_api_key_ttl_seconds" {
-  description = "Lifetime of the Grafana API key used for automated datasource and dashboard provisioning."
-  type        = number
-  default     = 2592000
-}
-
 variable "grafana_kms_key_deletion_window_in_days" {
-  description = "Deletion window for the Grafana customer managed KMS key."
+  description = "Deletion window for the Grafana logs customer managed KMS key."
   type        = number
   default     = 30
 }
 
-variable "grafana_admin_user_ids" {
-  description = "Optional IAM Identity Center user IDs that should receive Grafana admin access."
+variable "grafana_allowed_ingress_cidrs" {
+  description = "CIDR blocks allowed to reach the public Grafana ALB on port 80. Lock this down for non-portfolio deployments."
   type        = list(string)
-  default     = []
-}
+  default     = ["0.0.0.0/0"]
 
-variable "grafana_admin_group_ids" {
-  description = "Optional IAM Identity Center group IDs that should receive Grafana admin access."
-  type        = list(string)
-  default     = []
+  validation {
+    condition     = length(var.grafana_allowed_ingress_cidrs) > 0
+    error_message = "grafana_allowed_ingress_cidrs must contain at least one CIDR block."
+  }
 }
 
 variable "alarm_email" {

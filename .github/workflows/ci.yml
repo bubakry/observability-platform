@@ -35,10 +35,16 @@ jobs:
         run: python3 -m compileall app
 
       - name: Validate shell scripts
-        run: bash -n modules/grafana/scripts/provision_grafana.sh
-
-      - name: Validate Grafana JSON templates
         run: |
-          jq empty modules/grafana/templates/datasources/cloudwatch.json
-          jq empty modules/grafana/templates/datasources/xray.json
-          find modules/grafana/templates/dashboards -name '*.json' -print0 | xargs -0 -n 1 jq empty
+          bash -n grafana/entrypoint.sh
+          bash -n scripts/deploy.sh
+          bash -n scripts/destroy.sh
+
+      - name: Install PyYAML for provisioning validation
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Validate Grafana provisioning
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('grafana/provisioning/datasources/datasources.yaml'))"
+          python3 -c "import yaml; yaml.safe_load(open('grafana/provisioning/dashboards/dashboards.yaml'))"
+          find grafana/dashboards.tmpl -name '*.json' -print0 | xargs -0 -n 1 jq empty

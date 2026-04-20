@@ -11,8 +11,6 @@ locals {
   name                              = "${var.project_name}-${var.environment}"
   ecs_task_role_name                = "${local.name}-task-role"
   ecs_exec_role_name                = "${local.name}-execution-role"
-  grafana_folder_uid                = "enterprise-observability"
-  grafana_folder_name               = "AWS Enterprise Observability Platform"
   opensearch_free_storage_alarm_mib = var.opensearch_ebs_volume_size * 1024 * 0.25
 
   base_tags = {
@@ -91,6 +89,7 @@ module "ecr_build" {
   app_source_path      = "${path.module}/app"
   firelens_source_path = "${path.module}/firelens"
   xray_source_path     = "${path.module}/xray"
+  grafana_source_path  = "${path.module}/grafana"
   image_tag_mutability = var.ecr_image_tag_mutability
   force_delete         = var.ecr_force_delete
   tags                 = local.tags
@@ -208,14 +207,22 @@ module "grafana" {
   source = "./modules/grafana"
 
   name                            = "${local.name}-grafana"
-  description                     = "Managed Grafana workspace for the ECS, CloudWatch, X-Ray, and OpenSearch observability portfolio."
-  grafana_version                 = var.grafana_version
-  api_key_ttl_seconds             = var.grafana_api_key_ttl_seconds
-  admin_user_ids                  = var.grafana_admin_user_ids
-  admin_group_ids                 = var.grafana_admin_group_ids
   aws_account_id                  = var.aws_account_id
   aws_region                      = var.aws_region
+  vpc_id                          = module.networking.vpc_id
+  public_subnet_ids               = module.networking.public_subnet_ids
+  allowed_ingress_cidrs           = var.grafana_allowed_ingress_cidrs
+  image_uri                       = module.ecr_build.grafana_image_uri
+  cpu_architecture                = var.container_cpu_architecture
+  log_retention_days              = var.log_retention_days
   kms_key_deletion_window_in_days = var.grafana_kms_key_deletion_window_in_days
+  enable_deletion_protection      = var.enable_alb_deletion_protection
+  sns_topic_arn                   = aws_sns_topic.alerts.arn
+  app_log_group_name              = module.ecs_app.application_log_group_name
+  app_cluster_name                = module.ecs_app.cluster_name
+  app_service_name                = module.ecs_app.service_name
+  app_alb_arn_suffix              = module.ecs_app.alb_arn_suffix
+  app_target_group_arn_suffix     = module.ecs_app.target_group_arn_suffix
   tags                            = local.tags
 }
 
@@ -255,38 +262,3 @@ module "ecs_app" {
   tags                           = local.tags
 }
 
-resource "terraform_data" "grafana_bootstrap" {
-  triggers_replace = [
-    module.grafana.workspace_endpoint,
-    module.grafana.workspace_id,
-    module.ecs_app.cluster_name,
-    module.ecs_app.service_name,
-    module.ecs_app.application_log_group_name,
-    module.ecs_app.alb_arn_suffix,
-    module.ecs_app.target_group_arn_suffix,
-    filesha256("${path.module}/modules/grafana/scripts/provision_grafana.sh"),
-    sha256(join("", [for file in sort(fileset("${path.module}/modules/grafana/templates/datasources", "*.json")) : filesha256("${path.module}/modules/grafana/templates/datasources/${file}")])),
-    sha256(join("", [for file in sort(fileset("${path.module}/modules/grafana/templates/dashboards", "*.json")) : filesha256("${path.module}/modules/grafana/templates/dashboards/${file}")])),
-  ]
-
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command     = "bash ${path.module}/modules/grafana/scripts/provision_grafana.sh"
-
-    environment = {
-      GRAFANA_URL              = module.grafana.workspace_endpoint
-      GRAFANA_API_KEY          = module.grafana.api_key
-      GRAFANA_FOLDER_UID       = local.grafana_folder_uid
-      GRAFANA_FOLDER_TITLE     = local.grafana_folder_name
-      CLOUDWATCH_TEMPLATE_PATH = "${path.module}/modules/grafana/templates/datasources/cloudwatch.json"
-      XRAY_TEMPLATE_PATH       = "${path.module}/modules/grafana/templates/datasources/xray.json"
-      DASHBOARDS_DIR           = "${path.module}/modules/grafana/templates/dashboards"
-      AWS_REGION               = var.aws_region
-      CLUSTER_NAME             = module.ecs_app.cluster_name
-      SERVICE_NAME             = module.ecs_app.service_name
-      APP_LOG_GROUP            = module.ecs_app.application_log_group_name
-      ALB_ARN_SUFFIX           = module.ecs_app.alb_arn_suffix
-      TARGET_GROUP_ARN_SUFFIX  = module.ecs_app.target_group_arn_suffix
-    }
-  }
-}

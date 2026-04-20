@@ -1,25 +1,34 @@
-output "workspace_id" {
-  description = "Amazon Managed Grafana workspace ID."
-  value       = aws_grafana_workspace.this.id
+output "grafana_url" {
+  description = "Public URL for the OSS Grafana workspace."
+  value       = "http://${aws_lb.this.dns_name}"
 }
 
-output "workspace_endpoint" {
-  description = "Workspace URL used for dashboard provisioning."
-  value       = aws_grafana_workspace.this.endpoint
+output "alb_dns_name" {
+  description = "Grafana ALB DNS name."
+  value       = aws_lb.this.dns_name
 }
 
-output "workspace_role_arn" {
-  description = "IAM role ARN used by the managed workspace for AWS integrations."
-  value       = aws_grafana_workspace.this.role_arn
+output "admin_secret_arn" {
+  description = "Secrets Manager ARN holding the Grafana admin password."
+  value       = aws_secretsmanager_secret.admin.arn
 }
 
-output "workspace_kms_key_arn" {
-  description = "KMS key ARN used to encrypt the Grafana workspace at rest."
-  value       = aws_kms_key.workspace.arn
+output "admin_secret_name" {
+  description = "Secrets Manager secret name holding the Grafana admin password."
+  value       = aws_secretsmanager_secret.admin.name
 }
 
-output "api_key" {
-  description = "Sensitive Grafana API key used for automated provisioning."
-  value       = aws_grafana_workspace_api_key.automation.key
-  sensitive   = true
+output "cluster_name" {
+  description = "ECS cluster name running Grafana."
+  value       = aws_ecs_cluster.this.name
+}
+
+output "service_name" {
+  description = "ECS service name running Grafana."
+  value       = aws_ecs_service.this.name
+}
+
+output "log_group_name" {
+  description = "CloudWatch log group receiving Grafana container logs."
+  value       = aws_cloudwatch_log_group.this.name
 }

@@ -2,11 +2,13 @@ locals {
   app_context_hash      = sha256(join("", [for file in sort(fileset(var.app_source_path, "**")) : filesha256("${var.app_source_path}/${file}")]))
   firelens_context_hash = sha256(join("", [for file in sort(fileset(var.firelens_source_path, "**")) : filesha256("${var.firelens_source_path}/${file}")]))
   xray_context_hash     = sha256(join("", [for file in sort(fileset(var.xray_source_path, "**")) : filesha256("${var.xray_source_path}/${file}")]))
+  grafana_context_hash  = sha256(join("", [for file in sort(fileset(var.grafana_source_path, "**")) : filesha256("${var.grafana_source_path}/${file}")]))
 
   # Default to a content-addressable tag so IMMUTABLE repositories accept every push.
   app_image_tag      = coalesce(var.app_image_tag, substr(local.app_context_hash, 0, 16))
   firelens_image_tag = coalesce(var.firelens_image_tag, substr(local.firelens_context_hash, 0, 16))
   xray_image_tag     = coalesce(var.xray_image_tag, substr(local.xray_context_hash, 0, 16))
+  grafana_image_tag  = coalesce(var.grafana_image_tag, substr(local.grafana_context_hash, 0, 16))
 }
 
 resource "aws_ecr_repository" "app" {
@@ -43,6 +45,22 @@ resource "aws_ecr_repository" "firelens" {
 
 resource "aws_ecr_repository" "xray" {
   name                 = "${var.name}-xray-daemon"
+  image_tag_mutability = var.image_tag_mutability
+  force_delete         = var.force_delete
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = var.tags
+}
+
+resource "aws_ecr_repository" "grafana" {
+  name                 = "${var.name}-grafana"
   image_tag_mutability = var.image_tag_mutability
   force_delete         = var.force_delete
 
@@ -117,15 +135,37 @@ resource "aws_ecr_lifecycle_policy" "xray" {
   })
 }
 
+resource "aws_ecr_lifecycle_policy" "grafana" {
+  repository = aws_ecr_repository.grafana.name
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Retain the latest five Grafana images."
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 5
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+
 resource "terraform_data" "build_images" {
   triggers_replace = [
     aws_ecr_repository.app.repository_url,
     aws_ecr_repository.firelens.repository_url,
     aws_ecr_repository.xray.repository_url,
+    aws_ecr_repository.grafana.repository_url,
     var.image_platform,
     local.app_image_tag,
     local.firelens_image_tag,
     local.xray_image_tag,
+    local.grafana_image_tag,
   ]
 
   provisioner "local-exec" {
@@ -142,7 +182,7 @@ resource "terraform_data" "build_images" {
       docker buildx build --platform ${var.image_platform} --tag ${aws_ecr_repository.app.repository_url}:${local.app_image_tag} --push ${var.app_source_path}
       docker buildx build --platform ${var.image_platform} --tag ${aws_ecr_repository.firelens.repository_url}:${local.firelens_image_tag} --push ${var.firelens_source_path}
       docker buildx build --platform ${var.image_platform} --tag ${aws_ecr_repository.xray.repository_url}:${local.xray_image_tag} --push ${var.xray_source_path}
+      docker buildx build --platform ${var.image_platform} --tag ${aws_ecr_repository.grafana.repository_url}:${local.grafana_image_tag} --push ${var.grafana_source_path}
     EOT
   }
 }
-

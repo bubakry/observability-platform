@@ -13,6 +13,11 @@ output "xray_repository_url" {
   value       = aws_ecr_repository.xray.repository_url
 }
 
+output "grafana_repository_url" {
+  description = "ECR repository URL for the Grafana image."
+  value       = aws_ecr_repository.grafana.repository_url
+}
+
 output "app_image_uri" {
   description = "Fully qualified application image URI."
   value       = "${aws_ecr_repository.app.repository_url}:${local.app_image_tag}"
@@ -26,5 +31,10 @@ output "firelens_image_uri" {
 output "xray_image_uri" {
   description = "Fully qualified X-Ray daemon image URI."
   value       = "${aws_ecr_repository.xray.repository_url}:${local.xray_image_tag}"
+}
+
+output "grafana_image_uri" {
+  description = "Fully qualified Grafana image URI."
+  value       = "${aws_ecr_repository.grafana.repository_url}:${local.grafana_image_tag}"
 }
 

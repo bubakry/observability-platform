@@ -28,6 +28,11 @@ variable "xray_source_path" {
   type        = string
 }
 
+variable "grafana_source_path" {
+  description = "Path to the OSS Grafana Docker build context."
+  type        = string
+}
+
 variable "app_image_tag" {
   description = "Optional override for the application image tag. When null the tag is derived from the build context hash so each change produces a unique, immutable tag."
   type        = string
@@ -44,6 +49,13 @@ variable "firelens_image_tag" {
 
 variable "xray_image_tag" {
   description = "Optional override for the X-Ray daemon image tag. When null the tag is derived from the build context hash."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "grafana_image_tag" {
+  description = "Optional override for the Grafana image tag. When null the tag is derived from the build context hash."
   type        = string
   default     = null
   nullable    = true
