@@ -12,6 +12,7 @@ override.tf.json
 .env
 .env.local
 .envrc
+RUNBOOK.md
 .DS_Store
 __pycache__/
 .pytest_cache/
