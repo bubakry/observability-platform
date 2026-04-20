@@ -37,6 +37,7 @@ jobs:
       - name: Validate shell scripts
         run: |
           bash -n grafana/entrypoint.sh
+          bash -n scripts/bootstrap-config.sh
           bash -n scripts/deploy.sh
           bash -n scripts/destroy.sh
 

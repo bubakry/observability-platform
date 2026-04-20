@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# One-command teardown: load .env, verify the AWS caller matches TF_VAR_aws_account_id,
-# and run terraform destroy. ECR repositories require ecr_force_delete=true to remove
-# images on destroy — set TF_VAR_ecr_force_delete=true in .env first if you need that.
+# One-command teardown: load .env, fetch deploy-time config from Secrets Manager,
+# verify the AWS caller matches the configured account, and run terraform destroy.
+# ECR repositories require ecr_force_delete=true to remove images on destroy —
+# set TF_VAR_ecr_force_delete=true in .env first if you need that.
 
 set -euo pipefail
 
@@ -19,23 +20,40 @@ set -a
 source .env
 set +a
 
-: "${TF_VAR_aws_account_id:?TF_VAR_aws_account_id is required in .env}"
+: "${TF_VAR_aws_profile:?TF_VAR_aws_profile is required in .env}"
 
-# Make the named profile (if any) the active one for both Terraform and ad-hoc aws CLI calls below.
-if [[ -n "${TF_VAR_aws_profile:-}" ]]; then
-  export AWS_PROFILE="${TF_VAR_aws_profile}"
-fi
+export AWS_PROFILE="${TF_VAR_aws_profile}"
 
-for cmd in terraform aws; do
+for cmd in terraform aws jq; do
   if ! command -v "${cmd}" >/dev/null 2>&1; then
     echo "Required command not found on PATH: ${cmd}" >&2
     exit 1
   fi
 done
 
+region="${TF_VAR_aws_region:-us-east-1}"
+secret_name="${OBS_CONFIG_SECRET_NAME:-obs-platform/deploy-config}"
+
+config_json="$(aws secretsmanager get-secret-value \
+  --region "${region}" \
+  --secret-id "${secret_name}" \
+  --query SecretString \
+  --output text 2>/dev/null || true)"
+
+if [[ -z "${config_json}" ]]; then
+  echo "Failed to read ${secret_name} from Secrets Manager in ${region}." >&2
+  echo "Run scripts/bootstrap-config.sh first to seed it." >&2
+  exit 1
+fi
+
+export TF_VAR_aws_account_id="$(echo "${config_json}" | jq -r '.aws_account_id')"
+export TF_VAR_alarm_email="$(echo "${config_json}" | jq -r '.alarm_email')"
+export TF_VAR_owner="$(echo "${config_json}" | jq -r '.owner')"
+export TF_VAR_cost_center="$(echo "${config_json}" | jq -r '.cost_center')"
+
 caller_account="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
 if [[ "${caller_account}" != "${TF_VAR_aws_account_id}" ]]; then
-  echo "AWS caller account (${caller_account}) does not match TF_VAR_aws_account_id (${TF_VAR_aws_account_id})." >&2
+  echo "AWS caller account (${caller_account}) does not match config aws_account_id (${TF_VAR_aws_account_id})." >&2
   exit 1
 fi
 

@@ -47,6 +47,7 @@ This project provisions a production-ready observability platform on AWS using T
 ├── outputs.tf
 ├── providers.tf
 ├── scripts
+│   ├── bootstrap-config.sh
 │   ├── deploy.sh
 │   └── destroy.sh
 ├── terraform.tfvars.example
@@ -130,6 +131,7 @@ flowchart LR
 - AWS CLI configured for the target account (Terraform verifies the active caller account against `aws_account_id`)
 - Docker Desktop / engine running, with Buildx enabled
 - Terraform `1.14.8` or another `1.14.x` release
+- `jq` on PATH (the deploy/destroy scripts use it to parse the Secrets Manager config blob)
 - IAM permissions to create VPC, ECS, ECR, CloudWatch, SNS, OpenSearch, IAM, KMS, and Secrets Manager resources
 
 ### One-command deploy
@@ -138,20 +140,32 @@ flowchart LR
 
    ```bash
    cp .env.example .env
-   # edit .env: set TF_VAR_aws_account_id, TF_VAR_alarm_email, TF_VAR_owner, TF_VAR_cost_center
+   # edit .env: set TF_VAR_aws_profile, TF_VAR_aws_account_id, TF_VAR_alarm_email,
+   #           TF_VAR_owner, TF_VAR_cost_center
    ```
 
    `.env` is gitignored. Nothing personal or account-identifying lives in source control.
 
-2. Deploy:
+2. Seed the deploy-time config secret in AWS Secrets Manager (one-time, ~$0.40/month):
+
+   ```bash
+   ./scripts/bootstrap-config.sh
+   ```
+
+   Account ID, alarm email, owner, and cost center are written into a single
+   secret (`obs-platform/deploy-config` by default — override with
+   `OBS_CONFIG_SECRET_NAME`). After this, you can trim those four lines out of
+   `.env` — `deploy.sh` and `destroy.sh` fetch them from Secrets Manager every run.
+
+3. Deploy:
 
    ```bash
    ./scripts/deploy.sh
    ```
 
-   The script verifies your AWS credentials match `TF_VAR_aws_account_id`, checks Docker is reachable, runs `terraform init` and `terraform apply`, and prints the Grafana URL plus the AWS CLI command for retrieving the admin password.
+   The script fetches the config from Secrets Manager, verifies your AWS credentials match the configured account, checks Docker is reachable, runs `terraform init` and `terraform apply`, and prints the Grafana URL plus the AWS CLI command for retrieving the admin password.
 
-3. Open the Grafana URL printed at the end:
+4. Open the Grafana URL printed at the end:
 
    ```text
    Grafana:        http://<grafana-alb-dns>
@@ -161,7 +175,7 @@ flowchart LR
 
    The `AWS Enterprise Observability Platform` folder is preloaded with four dashboards: `Application Logs`, `Platform Metrics`, `X-Ray Traces`, `SLA Overview`.
 
-4. Generate traffic so panels light up:
+5. Generate traffic so panels light up:
 
    ```bash
    APP_URL=$(terraform output -raw application_url)
@@ -171,7 +185,7 @@ flowchart LR
    curl "${APP_URL}/fail"
    ```
 
-5. Confirm the SNS email subscription that AWS sends to `TF_VAR_alarm_email`.
+6. Confirm the SNS email subscription that AWS sends to `TF_VAR_alarm_email`.
 
 ### Manual workflow
 
@@ -208,7 +222,7 @@ If your ECR repositories still hold images (the default), set `TF_VAR_ecr_force_
 
 ## Continuous Integration
 
-A GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pull request. It checks Terraform formatting, runs `terraform validate`, compiles the Python app, syntax-checks the Grafana entrypoint and deploy/destroy scripts, validates the Grafana provisioning YAML, and validates each dashboard JSON template.
+A GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and pull request. It checks Terraform formatting, runs `terraform validate`, compiles the Python app, syntax-checks the Grafana entrypoint and the bootstrap/deploy/destroy scripts, validates the Grafana provisioning YAML, and validates each dashboard JSON template.
 
 ## Reusing This Platform
 
