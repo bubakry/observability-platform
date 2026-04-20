@@ -39,7 +39,9 @@ module "networking" {
 module "opensearch" {
   source = "./modules/opensearch"
 
-  domain_name                = "${local.name}-logs"
+  # AWS caps OpenSearch domain names at 28 chars, so we use a short, env-prefixed name
+  # rather than the full ${project_name}-${environment} prefix.
+  domain_name                = substr("obs-${var.environment}-logs", 0, 28)
   engine_version             = var.opensearch_engine_version
   instance_type              = var.opensearch_instance_type
   instance_count             = var.opensearch_instance_count

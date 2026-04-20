@@ -21,6 +21,11 @@ set +a
 
 : "${TF_VAR_aws_account_id:?TF_VAR_aws_account_id is required in .env}"
 
+# Make the named profile (if any) the active one for both Terraform and ad-hoc aws CLI calls below.
+if [[ -n "${TF_VAR_aws_profile:-}" ]]; then
+  export AWS_PROFILE="${TF_VAR_aws_profile}"
+fi
+
 for cmd in terraform aws; do
   if ! command -v "${cmd}" >/dev/null 2>&1; then
     echo "Required command not found on PATH: ${cmd}" >&2
