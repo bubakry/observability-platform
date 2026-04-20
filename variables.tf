@@ -100,36 +100,6 @@ variable "app_memory" {
   default     = 512
 }
 
-variable "opensearch_engine_version" {
-  description = "Managed Amazon OpenSearch Service engine version."
-  type        = string
-  default     = "OpenSearch_2.11"
-}
-
-variable "opensearch_instance_type" {
-  description = "Low-cost OpenSearch instance type for the portfolio environment."
-  type        = string
-  default     = "t3.small.search"
-}
-
-variable "opensearch_instance_count" {
-  description = "Number of OpenSearch data nodes."
-  type        = number
-  default     = 2
-}
-
-variable "opensearch_ebs_volume_size" {
-  description = "OpenSearch gp3 storage size in GiB."
-  type        = number
-  default     = 10
-}
-
-variable "opensearch_create_service_linked_role" {
-  description = "Create the OpenSearch service-linked role. Leave false when the AWS account already has it, which is the common case."
-  type        = bool
-  default     = false
-}
-
 variable "grafana_kms_key_deletion_window_in_days" {
   description = "Deletion window for the Grafana logs customer managed KMS key."
   type        = number

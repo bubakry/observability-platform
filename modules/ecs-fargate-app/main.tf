@@ -9,215 +9,28 @@ locals {
   xray_log_group          = "/aws/${var.name}/xray"
   app_signing_secret_name = "${var.name}/app-signing-key"
   application_name        = "enterprise-observability-api"
-  opensearch_index_name   = "ecs-observability"
   https_enabled           = var.alb_certificate_arn != null && trimspace(var.alb_certificate_arn) != ""
 
-  # ALB and target group names are capped at 32 characters. Reserve space for the
-  # suffixes so the ALB and target group names do not collide after truncation.
+  # ALB and target group names are capped at 32 characters. The Grafana module
+  # uses the same prefix and would collide after truncation, so the app side
+  # uses an explicit "-app-" infix.
   safe_name_prefix  = replace(var.name, "_", "-")
-  alb_name          = "${substr(local.safe_name_prefix, 0, 28)}-alb"
-  target_group_name = "${substr(local.safe_name_prefix, 0, 29)}-tg"
-
-  application_log_group_arn = "arn:${data.aws_partition.current.partition}:logs:${var.aws_region}:${var.aws_account_id}:log-group:${local.application_log_group}"
-  firelens_log_group_arn    = "arn:${data.aws_partition.current.partition}:logs:${var.aws_region}:${var.aws_account_id}:log-group:${local.firelens_log_group}"
-  xray_log_group_arn        = "arn:${data.aws_partition.current.partition}:logs:${var.aws_region}:${var.aws_account_id}:log-group:${local.xray_log_group}"
-}
-
-data "aws_iam_policy_document" "application_logs_kms" {
-  statement {
-    sid    = "EnableKeyAdministration"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${var.aws_account_id}:root"]
-    }
-
-    actions   = ["kms:*"]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "AllowCloudWatchLogsUse"
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:Describe*",
-    ]
-
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    condition {
-      test     = "ArnLike"
-      variable = "kms:EncryptionContext:aws:logs:arn"
-      values   = [local.application_log_group_arn]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "firelens_logs_kms" {
-  statement {
-    sid    = "EnableKeyAdministration"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${var.aws_account_id}:root"]
-    }
-
-    actions   = ["kms:*"]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "AllowCloudWatchLogsUse"
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:Describe*",
-    ]
-
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    condition {
-      test     = "ArnLike"
-      variable = "kms:EncryptionContext:aws:logs:arn"
-      values   = [local.firelens_log_group_arn]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "xray_logs_kms" {
-  statement {
-    sid    = "EnableKeyAdministration"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${var.aws_account_id}:root"]
-    }
-
-    actions   = ["kms:*"]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "AllowCloudWatchLogsUse"
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    actions = [
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:Describe*",
-    ]
-
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["logs.${var.aws_region}.amazonaws.com"]
-    }
-
-    condition {
-      test     = "ArnLike"
-      variable = "kms:EncryptionContext:aws:logs:arn"
-      values   = [local.xray_log_group_arn]
-    }
-  }
-}
-
-resource "aws_kms_key" "application_logs" {
-  description             = "KMS key for ${local.application_log_group}."
-  deletion_window_in_days = 30
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.application_logs_kms.json
-  tags                    = var.tags
-}
-
-resource "aws_kms_alias" "application_logs" {
-  name          = "alias/${var.name}/application-logs"
-  target_key_id = aws_kms_key.application_logs.key_id
-}
-
-resource "aws_kms_key" "firelens_logs" {
-  description             = "KMS key for ${local.firelens_log_group}."
-  deletion_window_in_days = 30
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.firelens_logs_kms.json
-  tags                    = var.tags
-}
-
-resource "aws_kms_alias" "firelens_logs" {
-  name          = "alias/${var.name}/firelens-logs"
-  target_key_id = aws_kms_key.firelens_logs.key_id
-}
-
-resource "aws_kms_key" "xray_logs" {
-  description             = "KMS key for ${local.xray_log_group}."
-  deletion_window_in_days = 30
-  enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.xray_logs_kms.json
-  tags                    = var.tags
-}
-
-resource "aws_kms_alias" "xray_logs" {
-  name          = "alias/${var.name}/xray-logs"
-  target_key_id = aws_kms_key.xray_logs.key_id
+  alb_name          = "${substr(local.safe_name_prefix, 0, 24)}-app-alb"
+  target_group_name = "${substr(local.safe_name_prefix, 0, 25)}-app-tg"
 }
 
 resource "aws_cloudwatch_log_group" "application" {
   name              = local.application_log_group
-  kms_key_id        = aws_kms_key.application_logs.arn
   retention_in_days = var.log_retention_days
 }
 
 resource "aws_cloudwatch_log_group" "firelens" {
   name              = local.firelens_log_group
-  kms_key_id        = aws_kms_key.firelens_logs.arn
   retention_in_days = var.log_retention_days
 }
 
 resource "aws_cloudwatch_log_group" "xray" {
   name              = local.xray_log_group
-  kms_key_id        = aws_kms_key.xray_logs.arn
   retention_in_days = var.log_retention_days
 }
 
@@ -473,18 +286,6 @@ data "aws_iam_policy_document" "task_inline" {
       "${aws_cloudwatch_log_group.application.arn}:*",
     ]
   }
-
-  statement {
-    sid    = "AllowOpenSearchIngestion"
-    effect = "Allow"
-    actions = [
-      "es:ESHttpGet",
-      "es:ESHttpHead",
-      "es:ESHttpPost",
-      "es:ESHttpPut",
-    ]
-    resources = ["${var.opensearch_domain_arn}/*"]
-  }
 }
 
 resource "aws_iam_role_policy" "task_inline" {
@@ -530,14 +331,6 @@ resource "aws_ecs_task_definition" "this" {
         {
           name  = "APPLICATION_LOG_GROUP"
           value = aws_cloudwatch_log_group.application.name
-        },
-        {
-          name  = "OPENSEARCH_HOST"
-          value = var.opensearch_endpoint
-        },
-        {
-          name  = "OPENSEARCH_INDEX"
-          value = local.opensearch_index_name
         },
       ]
       logConfiguration = {

@@ -33,16 +33,6 @@ variable "private_subnet_ids" {
   type        = list(string)
 }
 
-variable "opensearch_endpoint" {
-  description = "OpenSearch endpoint used by Fluent Bit."
-  type        = string
-}
-
-variable "opensearch_domain_arn" {
-  description = "OpenSearch domain ARN used in the task IAM policy."
-  type        = string
-}
-
 variable "app_image_uri" {
   description = "Private ECR image URI for the FastAPI service."
   type        = string

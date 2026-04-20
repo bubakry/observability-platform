@@ -18,16 +18,6 @@ output "grafana_admin_secret_name" {
   value       = module.grafana.admin_secret_name
 }
 
-output "opensearch_endpoint" {
-  description = "Private OpenSearch endpoint used by FireLens for structured log ingestion."
-  value       = module.opensearch.domain_endpoint
-}
-
-output "opensearch_dashboards_endpoint" {
-  description = "Private OpenSearch Dashboards endpoint."
-  value       = module.opensearch.dashboard_endpoint
-}
-
 output "alarm_sns_topic_arn" {
   description = "SNS topic targeted by all CloudWatch alarms."
   value       = aws_sns_topic.alerts.arn
